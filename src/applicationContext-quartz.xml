@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<beans xmlns="http://www.springframework.org/schema/beans"  
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"  
+    xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"  
+    xmlns:task="http://www.springframework.org/schema/task" 
+    xmlns:p="http://www.springframework.org/schema/p"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans  
+	http://www.springframework.org/schema/beans/spring-beans-3.0.xsd  
+	http://www.springframework.org/schema/context  
+	http://www.springframework.org/schema/context/spring-context-3.0.xsd  
+	http://www.springframework.org/schema/aop  
+	http://www.springframework.org/schema/aop/spring-aop-3.0.xsd  
+	http://www.springframework.org/schema/tx  
+	http://www.springframework.org/schema/tx/spring-tx-3.0.xsd  
+	http://www.springframework.org/schema/task   
+	http://www.springframework.org/schema/task/spring-task-3.0.xsd">
+
+	<!--  增量生成住院CDA的定时器 -->
+	<bean id="incrementTaskTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+        <property name="jobDetail" ref="incrementTask"/>
+ 		<property name="cronExpression" value="00 30 14 27 05 ?"/> 
+   	</bean>
+	<!--  增量生成门诊CDA的定时器 -->
+	<bean id="incrementOutpTaskTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+        <property name="jobDetail" ref="incrementOutpTask"/>
+ 		<property name="cronExpression" value="00 30 14 27 05 ?"/> 
+   	</bean>
+   	<!-- 定时 生成 CDA的定时器 -->
+   	<bean id="timingTaskTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+        <property name="jobDetail" ref="timingTask"/>
+ 		<property name="cronExpression" value="00 47 15 30 07 ?"/> 
+   	</bean>
+   	<!-- 增量生成住院的job -->
+   	<bean id="incrementTask" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+    	<property name="targetObject" ref="quartzJob"/>
+        <property name="targetMethod" value="execute"/>
+    </bean>
+   	<!-- 增量生成门诊的job -->
+   	<bean id="incrementOutpTask" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+    	<property name="targetObject" ref="quartzJob"/>
+        <property name="targetMethod" value="executeOutp"/>
+    </bean>
+    <!-- 定时生成的job -->
+    <bean id="timingTask" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+    	<property name="targetObject" ref="quartzJob"/>
+        <property name="targetMethod" value="timing"/>
+    </bean>
+    
+   	<bean id="quartzJob" class="com.goodwill.cda.hlht.gen.CDATask">
+    </bean>
+	
+	<bean class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+		<property name="triggers">
+			<list>
+				<!--  <ref bean="incrementTaskTrigger"/> 
+				 <ref bean="incrementOutpTaskTrigger"/> -->
+				 <ref bean="timingTaskTrigger"/> 
+			</list>
+		</property>
+	</bean>
+
+       
+</beans>

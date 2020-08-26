@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE struts PUBLIC
+    "-//Apache Software Foundation//DTD Struts Configuration 2.3//EN"
+    "struts-2.0.dtd">
+<!-- http://struts.apache.org/dtds/struts-2.0.dtd -->   
+<struts>
+ 
+	<!--用户角色管理       -->
+	<package name="/console/control"  extends="struts-hduap" namespace="/console/control">	
+	    <!-- 用户        Action -->	
+ 		<action name="user.action" class="com.goodwill.security.action.security.UserAction">
+			<result name="success">/console/jsp/control/user.jsp</result>
+		</action>				
+ 		<action name="user_*" class="com.goodwill.security.action.security.UserAction"  method="{1}">
+			<result name="success">/console/jsp/control/user.jsp</result>
+		</action>	
+		 <!--角色        Action -->	
+ 		<action name="role.action" class="com.goodwill.security.action.security.RoleAction">
+			<result name="success">/console/jsp/control/role.jsp</result>
+		</action>				
+ 		<action name="role_*" class="com.goodwill.security.action.security.RoleAction"  method="{1}">
+			<result name="success">/console/jsp/control/role.jsp</result>			
+		</action>
+		
+		 <!--资源       Action -->	
+ 		<action name="resource.action" class="com.goodwill.security.action.security.ResourceAction">
+			<result name="success">/console/jsp/control/resource.jsp</result>
+		</action>				
+ 		<action name="resource_*" class="com.goodwill.security.action.security.ResourceAction"  method="{1}">
+			<result name="success">/console/jsp/control/resource.jsp</result>
+		</action>
+		
+		
+		<!--权限      Action -->	
+ 		<action name="authority.action" class="com.goodwill.security.action.security.AuthorityAction">
+			<result name="success">/console/jsp/control/authority.jsp</result>
+		</action>				
+ 		<action name="authority_*" class="com.goodwill.security.action.security.AuthorityAction"  method="{1}">
+			<result name="success">/console/jsp/control/authority.jsp</result>
+		</action>
+		
+		<!--科室      Action -->	
+ 		<action name="dept.action" class="com.goodwill.security.action.security.DeptAction">
+			<result name="success">/console/jsp/control/dept.jsp</result>
+		</action>				
+ 		<action name="dept_*" class="com.goodwill.security.action.security.DeptAction"  method="{1}">
+			<result name="success">/console/jsp/control/dept.jsp</result>
+		</action>
+
+        <!--科室权限授予用户      Action -->  
+        <action name="deptUser.action" class="com.goodwill.security.action.security.DeptUserAction"></action>               
+        <action name="deptUser_*" class="com.goodwill.security.action.security.DeptUserAction"  method="{1}"></action>
+
+        <!--人员权限授予管理员      Action -->  
+        <action name="manageUser.action" class="com.goodwill.security.action.security.ManageUserAction"></action>               
+        <action name="manageUser_*" class="com.goodwill.security.action.security.ManageUserAction"  method="{1}"></action>
+                						
+    </package> 
+   
+    	
+</struts>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE struts PUBLIC
+    "-//Apache Software Foundation//DTD Struts Configuration 2.3//EN"
+    "struts-2.0.dtd">
+<struts>
+	<!-- 互联互通CDA -->
+	<package name="/hlht/web" extends="struts-hduap" namespace="/hlht/web">
+		<action name="cda_*" class="com.goodwill.cda.hlht.web.CDAAction"
+			method="{1}">
+		</action>
+		<!-- 查询CDA 文档生成进度action -->
+		<action name="schedule_*" class="com.goodwill.cda.hlht.web.MakeCDAScheduleAction"
+			method="{1}">
+		</action>
+	</package>
+</struts>
+
+

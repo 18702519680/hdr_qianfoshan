@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE struts PUBLIC
+    "-//Apache Software Foundation//DTD Struts Configuration 2.3//EN"
+    "struts-2.0.dtd">
+<!-- http://struts.apache.org/dtds/struts-2.0.dtd -->
+<struts>
+	<constant name="struts.enable.DynamicMethodInvocation" value="false" />
+	<constant name="struts.devMode" value="false" />
+	<constant name="struts.multipart.maxSize" value="10485760" />
+
+	<!-- exception拦截器 -->
+	<package name="struts-hduap" extends="struts-default"
+		namespace="/">
+		<interceptors>
+			<interceptor name="hduapException"
+				class="com.goodwill.core.web.ExceptionInterceptor" />
+			<interceptor-stack name="hduapStack">
+				<interceptor-ref name="paramsPrepareParamsStack" />
+				<interceptor-ref name="hduapException" />
+			</interceptor-stack>
+		</interceptors>
+		<!-- <default-interceptor-ref name="paramsPrepareParamsStack" /> -->
+
+		<default-interceptor-ref name="hduapStack" />
+
+		<global-results>
+			<!--能识别的异常 -->
+			<result name="error">/400.jsp</result>
+			<!--无法识别的异常 -->
+			<result name="sysError">/500.jsp</result>
+		</global-results>
+	</package>
+
+
+
+
+	<!-- 公用模块 <include file="struts-common.xml" /> -->
+	<!-- 权限模块 -->
+	<include file="struts-console.xml" />
+
+	<!-- <include file="struts-upv.xml" /> -->
+
+	<!-- 测试模块 -->
+	<!-- <include file="struts-test.xml" /> -->
+
+	<!-- CDA数据采集 -->
+	<!-- <include file="struts-cda-report.xml" /> -->
+	
+	<!-- 互联互通CDA -->
+	<include file="struts-cda.xml" />
+</struts>

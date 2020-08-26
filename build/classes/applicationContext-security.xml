@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<b:beans xmlns="http://www.springframework.org/schema/security"
+	xmlns:b="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/security 
+        http://www.springframework.org/schema/security/spring-security-3.2.xsd"
+	default-lazy-init="true">
+	<http pattern="/webServices/*" security="none"/>
+	
+	<global-method-security pre-post-annotations="enabled">
+	</global-method-security>
+	<!-- 不要过滤图片等静态资源 -->
+	<!-- 不配置就可以 <http pattern="/*.jpg" security="none" /> <http pattern="/*.png" 
+		security="none"/> <http pattern="/*.gif" security="none" /> <http pattern="/*.css" 
+		security="none" /> <http pattern="/*.js" security="none" /> <http pattern="/security/login.jsp" 
+		security="none" /> <http pattern="/security/forgotpassword.jsp" security="none" 
+		/> -->
+	
+	<!-- 登录 -->
+	<http  pattern="/**" access-denied-page="/security/accessDenied.jsp">
+		<form-login login-processing-url="/j_spring_security_check"
+			login-page="/security/login.jsp" authentication-failure-url="/security/login.jsp?error=1"
+			default-target-url="/index.jsp" />
+		<logout logout-success-url="/security/login.jsp?logout=1"
+			logout-url="/j_spring_security_logout" invalidate-session="false" />
+		<!-- "记住我"功能，采用持久化策略（将用户的登录信息存放在数据库表中） -->
+		<!-- <remember-me data-source-ref="dataSource" /> -->
+		<!-- 检测失效的sessionId,超时时定位到另外一个URL -->
+		<session-management invalid-session-url="/security/login.jsp?error=2" />
+		<!-- 增加一个自定义的filter，放在FILTER_SECURITY_INTERCEPTOR之前， 实现用户、角色、权限、资源的数据库管理。 -->
+		<custom-filter ref="requestHeaderFilter" before="FORM_LOGIN_FILTER"/>
+		<custom-filter ref="customFilter" before="FILTER_SECURITY_INTERCEPTOR" />
+	</http>
+	
+	<b:bean id="requestHeaderFilter" class="com.goodwill.security.sso.RequestHeaderProcessingFilter">
+		<b:property name="authenticationManager" ref="authenticationManager" />
+		<b:property name="authenticationSuccessHandler" ref="successHandler"/>
+    	<b:property name="authenticationFailureHandler" ref="failureHandler"/>
+	</b:bean>
+	<b:bean id="successHandler" class="com.goodwill.security.sso.SimpleUrlAuthenticationSuccessHandler">
+	    <b:property name="defaultTargetUrl" value="/" />
+	</b:bean>
+	<b:bean id="failureHandler" class="org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler">
+	    <b:property name="defaultFailureUrl" value="/" />
+	</b:bean>
+
+	<!-- 一个自定义的filter，必须包含authenticationManager, accessDecisionManager,securityMetadataSource三个属性。 -->
+	<b:bean id="customFilter" class="com.goodwill.security.filter.CustomSecurityFilter">
+		<b:property name="authenticationManager" ref="authenticationManager" />
+		<b:property name="accessDecisionManager" ref="customAccessDecisionManager" />
+		<b:property name="securityMetadataSource" ref="invocationSecurityMetadataSourceService" />
+	</b:bean>
+	
+
+	<b:bean id="customAccessDecisionManager"
+		class="com.goodwill.security.service.CustomAccessDecisionManager" />
+		
+	<b:bean id="invocationSecurityMetadataSourceService"
+		class="com.goodwill.security.service.InvocationSecurityMetadataSourceService" />
+
+	<b:bean id="customUserDetailsService"
+		class="com.goodwill.security.service.CustomUserDetailsService" />
+
+
+	<!-- 注意能够为authentication-manager 设置alias别名 -->
+	<authentication-manager alias="authenticationManager">
+		<authentication-provider ref= "signedRequestAuthenticationProvider"/>
+		<authentication-provider user-service-ref="customUserDetailsService">
+			<password-encoder ref="passwordEncoder">
+				<salt-source user-property="username" />
+			</password-encoder>
+		</authentication-provider>
+	</authentication-manager>
+
+
+<!-- 	<authenticationManager>
+		<authentication-provider user-service-ref="customUserDetailsService">
+			<password-encoder ref="passwordEncoder">
+				<salt-source user-property="username" />
+			</password-encoder>
+		</authentication-provider>
+	</authenticationManager> -->
+	
+	<b:bean id="signedRequestAuthenticationProvider"  class="com.goodwill.security.sso.SignedUsernamePasswordAuthenticationProvider">    
+	  <b:property name="userDetailsService" ref="customUserDetailsService"/>    
+	</b:bean>  
+
+
+	<!--JCaptcha验证码服务 -->
+	<b:bean id="captchaService"
+		class="com.octo.captcha.service.image.DefaultManageableImageCaptchaService">
+		<b:property name="captchaEngine">
+			<b:bean class="com.goodwill.security.utils.captcha.GMailEngine" />
+		</b:property>
+		<!-- 默认生成的图片180秒过期 , 可另行设置 <property name="minGuarantedStorageDelayInSeconds" 
+			value="180" /> -->
+	</b:bean>
+
+
+	<b:bean id="passwordEncoder"
+		class="org.springframework.security.authentication.encoding.ShaPasswordEncoder" />
+
+	<b:bean id="localeResolver"
+		class="org.springframework.web.servlet.i18n.AcceptHeaderLocaleResolver" />
+	<b:bean id="messageSource"
+		class="org.springframework.context.support.ResourceBundleMessageSource">
+		<b:property name="basename" value="security/security_message" />
+	</b:bean>
+
+</b:beans>

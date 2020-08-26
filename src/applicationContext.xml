@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:jee="http://www.springframework.org/schema/jee"
+	xmlns:tx="http://www.springframework.org/schema/tx" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd 
+	http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.1.xsd 
+	http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee-3.1.xsd 
+	http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd">
+
+	<!-- 使用annotation 自动注册bean,并保证@Required,@Autowired的属性被注入 -->
+	<context:component-scan base-package="com.goodwill" />
+
+
+
+	<import resource="classpath:META-INF/cxf/cxf.xml" />
+	<import resource="classpath:META-INF/cxf/cxf-extension-soap.xml" />
+	<import resource="classpath:META-INF/cxf/cxf-servlet.xml" />
+
+	<!-- 数据库外部文件配置 -->
+	<bean
+		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="locations">
+			<list>
+				<value>classpath:jdbc.properties</value>
+				<value>classpath:hbase.properties</value>
+			</list>
+		</property>
+	</bean>
+	<!-- 数据源配置,使用HBase数据库连接池 -->
+	<bean id="hbaseDataSource" class="com.goodwill.hadoop.hbase.HbaseDataSource">
+		<property name="maxTotal" value="${pool.max.total}" />
+		<property name="maxIdle" value="${pool.max.idle}" />
+		<property name="maxWaitMillis" value="${pool.max.wait.millis}" />
+		<property name="testOnBorrow" value="${pool.test.on.borrow}" />
+		<property name="host" value="${hbase.zk.host}" />
+		<property name="port" value="${hbase.zk.port}" />
+		<property name="master" value="${hbase_master}" />
+		<property name="rootdir" value="${hbase.rootdir}" />
+	</bean>
+	<!-- 数据源配置,使用BoneCP数据库连接池 -->
+	<bean id="dataSource" class="com.jolbox.bonecp.BoneCPDataSource"
+		destroy-method="close">
+		<property name="driverClass" value="${jdbc.driverClassName}" />
+		<property name="jdbcUrl" value="${jdbc.url}" />
+		<property name="username" value="${jdbc.username}" />
+		<property name="password" value="${jdbc.password}" />
+
+		<!-- 检查数据库连接池中空闲连接的间隔时间，单位是分，默认值：240，如果要取消则设置为0 -->
+		<property name="idleConnectionTestPeriod" value="${jdbc.idleConnectionTestPeriod}" />
+		<!-- 连接池中未使用的链接最大存活时间，单位是分，默认值：60，如果要永远存活设置为0 -->
+		<property name="idleMaxAge" value="${jdbc.idleMaxAge}" />
+		<!-- 每个分区最大的连接数 -->
+		<property name="maxConnectionsPerPartition" value="${jdbc.maxConnectionsPerPartition}" />
+		<!-- 每个分区最小的连接数 -->
+		<property name="minConnectionsPerPartition" value="${jdbc.minConnectionsPerPartition}" />
+		<!-- 分区数 ，默认值2，最小1，推荐3-4，视应用而定 -->
+		<property name="partitionCount" value="${jdbc.partitionCount}" />
+		<!-- 每次去拿数据库连接的时候一次性要拿几个,默认值：2 -->
+		<property name="acquireIncrement" value="${jdbc.acquireIncrement}" />
+		<!-- 缓存prepared statements的大小，默认值：0 -->
+		<property name="statementsCacheSize" value="${jdbc.statementsCacheSize}" />
+		<!-- 每个分区释放链接助理进程的数量，默认值：3，除非你的一个数据库连接的时间内做了很多工作，不然过多的助理进程会影响你的性能 -->
+		<property name="releaseHelperThreads" value="${jdbc.releaseHelperThreads}" />
+		<property name="logStatementsEnabled" value="true" />
+	</bean>
+
+	<!-- Hibernate配置 -->
+	<bean id="sessionFactory"
+		class="org.springframework.orm.hibernate3.annotation.AnnotationSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+
+		<property name="namingStrategy">
+			<bean class="org.hibernate.cfg.ImprovedNamingStrategy" />
+		</property>
+
+		<property name="hibernateProperties">
+			<props>
+				<!-- 取消版本验证，不加有些机器报错， -->
+				<prop key="hibernate.validator.apply_to_ddl">false</prop>
+				<prop key="hibernate.validator.autoregister_listeners">false</prop>
+
+				<prop key="hibernate.jdbc.batch_size">${hibernate.jdbc.batch_size}</prop>
+				<prop key="hibernate.dialect">${hibernate.dialect} </prop>
+				<prop key="hibernate.show_sql">${hibernate.show_sql}</prop>
+				<prop key="hibernate.format_sql">${hibernate.format_sql}</prop>
+				<prop key="hibernate.generate_statistics">${hibernate.generate_statistics}</prop>
+
+			</props>
+		</property>
+		<!-- hibernate annotation config -->
+		<property name="packagesToScan" value="com.goodwill" />
+	</bean>
+
+
+	<!-- 事务管理器配置,单数据源事务 -->
+	<bean id="transactionManager"
+		class="org.springframework.orm.hibernate3.HibernateTransactionManager">
+		<property name="sessionFactory" ref="sessionFactory" />
+		<property name="nestedTransactionAllowed" value="true" />
+	</bean>
+
+	<!-- 使用annotation定义事务 -->
+	<tx:annotation-driven transaction-manager="transactionManager"
+		proxy-target-class="true" />
+
+	<!-- ID生成器配置 -->
+	<bean id="oidGenerator"
+		class="com.goodwill.core.common.oid.generator.OIDGeneratorUtils">
+		<property name="dataSource" ref="dataSource" />
+		<property name="tableName" value="sm_sequence" />
+		<property name="pkName" value="seq_id" />
+		<property name="idName" value="max_value" />
+		<property name="perCount" value="100" />
+		<property name="length" value="11" />
+		<property name="startChar" value="" />
+	</bean>
+
+
+	<bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+
+	<bean id="springContextHolder" class="com.goodwill.core.utils.SpringContextHolder"
+		lazy-init="false" />
+
+
+	<import resource="applicationContext-security.xml" />
+
+	<!-- 引入WebService -->
+	<!-- <import resource="applicationContext-webservice.xml" /> -->
+	<!-- 引入定时任务 -->
+	<import resource="applicationContext-quartz.xml" />
+	<!-- 引入RMI 支持 <import resource="applicationContext-rmi.xml" /> -->
+</beans> 
