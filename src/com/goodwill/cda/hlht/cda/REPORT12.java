@@ -37,6 +37,7 @@ public class REPORT12 {
 	private static String radiotherapydrugrecord_tablename = PropertiesUtils.getPropertyValue(CONFIG_FILE_NAME,
 			"radiotherapyDrugRecord_tablename");
 
+	
 	public static void main(String[] args) throws Exception {
 	}
 

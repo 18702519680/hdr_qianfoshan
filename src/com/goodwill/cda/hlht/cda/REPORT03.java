@@ -34,8 +34,9 @@ public class REPORT03 {
 	private static String function_name = PropertiesUtils.getPropertyValue(CONFIG_FILE_NAME, "admissionDischargeInfo");
 	private static String version = PropertiesUtils.getPropertyValue(CONFIG_FILE_NAME,"admissionDischargeInfo_version");
 	private static String admissiondischargeinfo_tablename = PropertiesUtils.getPropertyValue(CONFIG_FILE_NAME,"admissionDischargeInfo_tablename");
-
+	
 	public static void main(String[] args) throws Exception {
+		postAdmissionDischargeInfo("2013-01-05", "2013-01-17");
 	}
 
 	public static JSONArray getAdmissionDischargeJsonInfo(Map<String, String> map) {
@@ -95,23 +96,20 @@ public class REPORT03 {
 
 	public static void postAdmissionDischargeInfo(String startDate, String endDate) {
 		// 将从配置文件中得到的日期反转，跟rowkey一样
-		String start = new StringBuffer(startDate.replaceAll("-", "")).reverse().toString();
-		String end = new StringBuffer(endDate.replaceAll("-", "")).reverse().toString();
+		String start = new StringBuffer(startDate.replaceAll("-", "")).toString();
+		String end = new StringBuffer(endDate.replaceAll("-", "")).toString();
 
 		List<Map<String, String>> listSumm = new ArrayList<Map<String, String>>();
 		List<PropertyFilter> filters = new ArrayList<PropertyFilter>();
-		filters.add(new PropertyFilter("RYSJ", "STRING", MatchType.GE.getOperation(), startDate + " 00:00:00"));
-		filters.add(new PropertyFilter("RYSJ", "STRING", MatchType.LE.getOperation(), endDate + " 23:59:59"));
-		/**
-		 * 在HDR_PATIENT_ZLSB表中 rowkey 是按照入院时间 来开头的所以 查询 过滤 是按照入院时间查询的
-		 */
+		filters.add(new PropertyFilter("NCDISCHARGETIME", "STRING", MatchType.GE.getOperation(), startDate.replaceAll("-", "") + "000000"));
+		filters.add(new PropertyFilter("NCDISCHARGETIME", "STRING", MatchType.LE.getOperation(), endDate.replaceAll("-", "") + "235959"));
 		listSumm = Xmlutil.formatList(HbaseCURDUtils.findByRowkey(admissiondischargeinfo_tablename, start, end, filters));
 		JSONArray json = new JSONArray();
 		JSONArray jsonall = new JSONArray();
 		JSONObject jsonallarr = new JSONObject();
 		if (listSumm.size() > 0) {
 			try {
-				for (int i = 0; i < listSumm.size(); i++) {
+				for (int i = 0; i < 2; i++) {
 					Map<String, String> mapInfo = listSumm.get(i);
 					json = getAdmissionDischargeJsonInfo(mapInfo);
 					jsonall.addAll(json);

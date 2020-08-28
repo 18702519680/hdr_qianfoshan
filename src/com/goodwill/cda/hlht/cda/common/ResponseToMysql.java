@@ -147,8 +147,13 @@ public class ResponseToMysql {
 		    		JSONArray dataArray = originalJsonData.getJSONArray("ncErrorDataList");
 		    		//调用成功标志
 					String repost_flag = originalJsonData.getString("ncResultCode").equals("0")?"Y":"N";
-		    		
-		            resp_text=MergeJsonUtil.getMergeJson(responseString,lineno).toString();
+		    		if(dataArray.isEmpty()) {
+		    			resp_text="";
+		    		}
+		    		else {
+		    			resp_text=MergeJsonUtil.getMergeJson(responseString,lineno).toString();
+		    		}
+		            
 		            rowkey = getRowkeyByLineno(requestString,lineno);
 		            sql.append("insert into hdr_logs_detail_zlsb (rowkey,lineno,req_text,resp_text,uuid,repostflag,function_name,createdtime,createdby) values (");
 					sql.append("'"+rowkey+"'"+",");

@@ -36,7 +36,7 @@ public class REPORT04 {
 	private static String transferinfo_tablename = PropertiesUtils.getPropertyValue(CONFIG_FILE_NAME,"transferInfo_tablename");
 
 	public static void main(String[] args) throws Exception {
-		postTransferInfo("2015-04-10", "2015-05-02");
+		postTransferInfo("2015-05-08", "2015-07-08");
 	}
 
 	public static JSONArray getTransferJsonInfo(Map<String, String> map) {
@@ -68,13 +68,13 @@ public class REPORT04 {
 
 	public static void postTransferInfo(String startDate, String endDate) {
 		// 将从配置文件中得到的日期反转，跟rowkey一样
-		String start = new StringBuffer(startDate.replaceAll("-", "")).reverse().toString();
-		String end = new StringBuffer(endDate.replaceAll("-", "")).reverse().toString();
+		String start = new StringBuffer(startDate.replaceAll("-", "")).toString();
+		String end = new StringBuffer(endDate.replaceAll("-", "")).toString();
 
 		List<Map<String, String>> listSumm = new ArrayList<Map<String, String>>();
 		List<PropertyFilter> filters = new ArrayList<PropertyFilter>();
-		filters.add(new PropertyFilter("NCDISCHARGETIME", "STRING", MatchType.GE.getOperation(), startDate + " 00:00:00"));
-		filters.add(new PropertyFilter("NCDISCHARGETIME", "STRING", MatchType.LE.getOperation(), endDate + " 23:59:59"));
+		filters.add(new PropertyFilter("NCDISCHARGETIME", "STRING", MatchType.GE.getOperation(), startDate.replaceAll("-", "") + "000000"));
+		filters.add(new PropertyFilter("NCDISCHARGETIME", "STRING", MatchType.LE.getOperation(), endDate.replaceAll("-", "") + "235959"));
 		/**
 		 * 在HDR_PATIENT_ZLSB表中 rowkey 是按照入院时间 来开头的所以 查询 过滤 是按照入院时间查询的
 		 */
@@ -84,7 +84,7 @@ public class REPORT04 {
 		JSONObject jsonallarr = new JSONObject();
 		if (listSumm.size() > 0) {
 			try {
-				for (int i = 0; i < 10; i++) {
+				for (int i = 0; i < 2; i++) {
 					Map<String, String> mapInfo = listSumm.get(i);
 					json = getTransferJsonInfo(mapInfo);
 					jsonall.addAll(json);

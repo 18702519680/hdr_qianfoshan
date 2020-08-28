@@ -37,23 +37,28 @@ public class REPORT25 {
 			"lymphNodePathology_tablename");
 
 	public static void main(String[] args) throws Exception {
+		postLymphNodePathology("2018-10-10", "2018-10-11");
 	}
 
 	public static JSONArray getLymphNodePathologyJsonInfo(Map<String, String> map) {
 		JSONObject json = new JSONObject();
+		List<PropertyFilter> filters = new ArrayList<PropertyFilter>();
+//		filters.add(new PropertyFilter("NCMEDICALRECORDNO", "STRING", MatchType.EQ.getOperation(), map.get("ncMedicalRecordNo")));
+//		List<Map<String, String>> listDiag = Xmlutil.formatList(HbaseCURDUtilsToCDA.findByCondition(
+//				"HDR_MEDICALRECORDFIRSTPAGE_ZLSB", HbaseCURDUtilsToCDA.getRowkeyPrefix(map.get("ncMedicalRecordNo")), filters));
 		try {
 			json.put("rowKey", map.get("ROWKEY"));// rowKey
-			json.put("ncMedicalRecordNo", map.get("NCMEDICALRECORDNO"));// 病案号
-			json.put("ncDischargeTime", map.get("NCDISCHARGETIME"));// 出院时间
-			json.put("ncPathologyNo", map.get("NCPATHOLOGYNO"));// 病理号
-			json.put("ncPathologyChineseName", map.get("NCPATHOLOGYCHINESENAME"));// 病理项目中文名称
-			json.put("ncExamTime", map.get("NCEXAMTIME"));// 病理检查时间
-			json.put("ncSendToTestTime", map.get("NCSENDTOTESTTIME"));// 送检时间
-			json.put("ncReportTime", map.get("NCREPORTTIME"));// 报告时间
-			json.put("ncRegionalLymphNodeCount", map.get("NCREGIONALLYMPHNODECOUNT"));// 区域淋巴结个数
-			json.put("ncLymphNodeInvolvementCount", map.get("NCLYMPHNODEINVOLVEMENTCOUNT"));// 淋巴结受累个数
-			json.put("ncSendToTestCount", map.get("NCSENDTOTESTCOUNT"));// 送检个数
-			json.put("ncCancel", map.get("NCCANCEL"));// 取消区分
+			json.put("ncMedicalRecordNo", map.get("ncMedicalRecordNo"));// 病案号
+			json.put("ncDischargeTime", map.get("ncDischargeTime"));// 出院时间
+			json.put("ncPathologyNo", map.get("ncPathologyNo"));// 病理号
+			json.put("ncPathologyChineseName", map.get("ncPathologyChineseName"));// 病理项目中文名称
+			json.put("ncExamTime", map.get("ncExamTime"));// 病理检查时间
+			json.put("ncSendToTestTime", map.get("ncSendToTestDate"));// 送检时间
+			json.put("ncReportTime", map.get("ncReportTime"));// 报告时间
+			json.put("ncRegionalLymphNodeCount", "");// 区域淋巴结个数
+			json.put("ncLymphNodeInvolvementCount", "");// 淋巴结受累个数
+			json.put("ncSendToTestCount", "");// 送检个数
+			json.put("ncCancel", "1");// 取消区分
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}
@@ -69,8 +74,8 @@ public class REPORT25 {
 
 		List<Map<String, String>> listSumm = new ArrayList<Map<String, String>>();
 		List<PropertyFilter> filters = new ArrayList<PropertyFilter>();
-		filters.add(new PropertyFilter("RYSJ", "STRING", MatchType.GE.getOperation(), startDate + " 00:00:00"));
-		filters.add(new PropertyFilter("RYSJ", "STRING", MatchType.LE.getOperation(), endDate + " 23:59:59"));
+		filters.add(new PropertyFilter("ncReportTime", "STRING", MatchType.GE.getOperation(), (startDate + "000000").replace("-", "")));
+		filters.add(new PropertyFilter("ncReportTime", "STRING", MatchType.LE.getOperation(), (endDate + "235959").replace("-", "")));
 		/**
 		 * 在HDR_PATIENT_ZLSB表中 rowkey 是按照入院时间 来开头的所以 查询 过滤 是按照入院时间查询的
 		 */
@@ -81,7 +86,7 @@ public class REPORT25 {
 		if (listSumm.size() > 0) {
 			// TODO:这里先取10条数据，到时候记得改成listSumm.size()
 			try {
-				for (int i = 0; i < 10; i++) {
+				for (int i = 0; i < 2; i++) {
 					Map<String, String> mapInfo = listSumm.get(i);
 					json = getLymphNodePathologyJsonInfo(mapInfo);
 					jsonall.addAll(json);

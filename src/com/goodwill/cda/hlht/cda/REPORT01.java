@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import com.amazonaws.util.json.JSONException;
 import com.amazonaws.util.json.JSONObject;
+import com.goodwill.cda.hlht.cda.common.GetCommonData;
 import com.goodwill.cda.hlht.cda.common.HttpClientPost;
 import com.goodwill.cda.hlht.cda.common.ResponseToMysql;
 import com.goodwill.cda.util.HbaseCURDUtilsToCDA;
@@ -20,13 +21,11 @@ import com.goodwill.core.utils.PropertiesUtils;
 import com.goodwill.hadoop.hbase.HbaseCURDUtils;
 
 import net.sf.json.JSONArray;
-
 /**
  * @Description 类描述：患者基本信息
  * @author 吴黎兵
  * @Date 2020年6月10日 方法名：patientBasicInfo 版本号：1.0.0
  * @modify 修改记录：
- * 
  */
 public class REPORT01 {
 	protected static Logger logger = LoggerFactory.getLogger(REPORT01.class);
@@ -36,7 +35,7 @@ public class REPORT01 {
 	private static String patientbasicinfo_tablename = PropertiesUtils.getPropertyValue(CONFIG_FILE_NAME,"patientBasicInfo_tablename");
 
 	public static void main(String[] args) throws Exception {
-		postAllPatientBasicInfo("2015-04-10", "2015-05-02");
+		postAllPatientBasicInfo("2019-10-19", "2019-10-21");
 	}
 
 	public static JSONArray getPatientBasicJsonInfo(Map<String, String> map) {
@@ -46,11 +45,11 @@ public class REPORT01 {
 			json.put("ncMedicalRecordNo", map.get("NCMEDICALRECORDNO"));// 病案号
 			json.put("ncName", map.get("NCNAME"));// 姓名
 			// json.put("ncGenderCode",DictUtils.getFinalDict("RC001",map.get("NCGENDERCODE")));//性别代码
-			json.put("ncGenderCode", map.get("NCGENDERCODE"));// 性别代码
-			json.put("ncBirthDate", map.get("NCBIRTHDATE").replace("-", ""));// 出生日期
+			json.put("ncGenderCode", GetCommonData.GetCodeFromMysql("",map.get("NCGENDERCODE"),"RC001"));// 性别代码
+			json.put("ncBirthDate", map.get("NCBIRTHDATE"));// 出生日期
 			json.put("ncOccupationTypeCode", map.get("NCOCCUPATIONTYPECODE"));// 职业类别代码
-			json.put("ncNationalityCode", map.get("NCNATIONALITYCODE"));// 国籍代码
-			json.put("ncNationCode", map.get("NCNATIONCODE"));// 民族代码
+			json.put("ncNationalityCode", GetCommonData.GetCodeFromMysql("",map.get("NCNATIONALITYCODE"),"RC085"));// 国籍代码
+			json.put("ncNationCode", GetCommonData.GetCodeFromMysql("",map.get("NCNATIONCODE"),"RC035"));// 民族代码
 			json.put("ncEducationCode", map.get("NCEDUCATIONCODE"));// 文化程度代码
 			json.put("ncEducation", map.get("NCEDUCATION"));// 文化程度
 			json.put("ncCredentialTypeCode", map.get("NCCREDENTIALTYPECODE"));// 证件类型代码
@@ -85,17 +84,18 @@ public class REPORT01 {
 
 	public static void postAllPatientBasicInfo(String startDate, String endDate) {
 		// 将从配置文件中得到的日期反转，跟rowkey一样
-		String start = new StringBuffer(startDate.replaceAll("-", "")).reverse().toString();
-		String end = new StringBuffer(endDate.replaceAll("-", "")).reverse().toString();
+		String start = new StringBuffer(startDate.replaceAll("-", "")).toString();
+		String end = new StringBuffer(endDate.replaceAll("-", "")).toString();
 
 		List<Map<String, String>> listSumm = new ArrayList<Map<String, String>>();
 		List<PropertyFilter> filters = new ArrayList<PropertyFilter>();
-		filters.add(new PropertyFilter("RYSJ", "STRING", MatchType.GE.getOperation(), startDate + " 00:00:00"));
-		filters.add(new PropertyFilter("RYSJ", "STRING", MatchType.LE.getOperation(), endDate + " 23:59:59"));
+		filters.add(new PropertyFilter("CYSJ", "STRING", MatchType.GE.getOperation(), startDate.replaceAll("-", "") + "000000"));
+		filters.add(new PropertyFilter("CYSJ", "STRING", MatchType.LE.getOperation(), endDate.replaceAll("-", "") + "235959"));
 		/**
-		 * 在HDR_PATIENT_ZLSB表中 rowkey 是按照入院时间 反转来开头的所以 查询 过滤 是按照入院时间查询的
+		 * 在HDR_PATIENT_ZLSB表中 rowkey 是按照出院时间 反转来开头的所以 查询 过滤 是按照入院时间查询的
 		 */
 		listSumm = Xmlutil.formatList(HbaseCURDUtils.findByRowkey(patientbasicinfo_tablename, start, end, filters));
+		
 		JSONArray json = new JSONArray();
 		JSONArray jsonall = new JSONArray();
 		JSONObject jsonallarr = new JSONObject();

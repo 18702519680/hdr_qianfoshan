@@ -1,8 +1,13 @@
 package com.goodwill.cda.hlht.cda.common;
 
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,12 +17,16 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
+import org.hsqldb.lib.StringUtil;
 
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.globalmentor.collections.Collections;
 import com.goodwill.cda.hlht.enums.BaseInfoEnum;
 import com.goodwill.cda.util.CommonUtils;
 import com.goodwill.cda.util.DictUtisTools;
 import com.goodwill.cda.util.FiltersUtils;
+import com.goodwill.cda.util.MysqlUtil;
 import com.goodwill.cda.util.Xmlutil;
 import com.goodwill.core.enums.EnumType;
 import com.goodwill.core.orm.MatchType;
@@ -934,5 +943,55 @@ public class GetCommonData {
 		Map<String, String> hldj = DictUtisTools.getHLDJ(nurseGradeMap.get("ORDER_ITEM_NAME"),
 				nurseGradeMap.get("ORDER_ITEM_NAME"));
 		return hldj;
+	}
+	
+	
+	public static String GetCodeFromMysql(String name,String code,String codetype) {
+		StringBuilder sql = new StringBuilder();
+		if(StringUtil.isEmpty(name)) {
+		sql.append("select * from hdr_dmb_zlsb where ");
+		sql.append("dl='"+codetype+"'");
+		sql.append("and dmmc='"+code+"'");
+		}
+		else {
+			sql.append("select * from hdr_dmb_zlsb where ");
+			sql.append("dl='"+codetype+"'");
+			sql.append("and dmmc='"+name+"'");
+		}
+		Statement statement = null;
+		Connection conn = null;
+		ResultSet res= null;
+		String returncode= null;
+		try {
+			conn = MysqlUtil.GetConnection();
+			if (conn == null) {
+				for (int i = 0; i < 3; i++) {
+					try {
+						Thread.sleep(3000);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					try {
+						conn = MysqlUtil.GetConnection();
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+					if (conn != null) {
+						break;
+					}
+				}
+			}
+			if (conn == null) {
+				return null;
+			}
+			statement = conn.createStatement();
+			res= statement.executeQuery(sql.toString());
+				while (res.next()) {
+					returncode = res.getString("dm");
+				}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} 
+		return returncode;
 	}
 }

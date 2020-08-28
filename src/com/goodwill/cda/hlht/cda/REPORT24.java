@@ -76,7 +76,7 @@ public class REPORT24 {
 			json.put("ncSurgicalMargin", map.get("ncSurgicalMargin"));// 手术切缘
 			json.put("ncIhcResult", map.get("ncIhcResult"));// 免疫组化结果
 			json.put("ncFile", map.get("ncFile"));// 二进制文件
-			json.put("ncCancel", map.get("ncCancel"));// 取消区分
+			json.put("ncCancel", "0");// 取消区分
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}
@@ -104,7 +104,7 @@ public class REPORT24 {
 		if (listSumm.size() > 0) {
 			// TODO:这里先取10条数据，到时候记得改成listSumm.size()
 			try {
-				for (int i = 0; i < 10; i++) {
+				for (int i = 0; i < 2; i++) {
 					Map<String, String> mapInfo = listSumm.get(i);
 					json = getPathologyInfoJsonInfo(mapInfo);
 					jsonall.addAll(json);

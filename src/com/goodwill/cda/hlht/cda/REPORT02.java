@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import com.amazonaws.util.json.JSONException;
 import com.amazonaws.util.json.JSONObject;
+import com.goodwill.cda.hlht.cda.common.GetCommonData;
 import com.goodwill.cda.hlht.cda.common.HttpClientPost;
 import com.goodwill.cda.hlht.cda.common.ResponseToMysql;
 import com.goodwill.cda.util.HbaseCURDUtilsToCDA;
@@ -20,13 +21,11 @@ import com.goodwill.core.utils.PropertiesUtils;
 import com.goodwill.hadoop.hbase.HbaseCURDUtils;
 
 import net.sf.json.JSONArray;
-
 /**
  * @Description 类描述：病案首页基本信息
  * @author 吴黎兵
  * @Date 2020年6月11日 方法名：medicalRecordFirstPage 版本号：1.0.0
  * @modify 修改记录：
- * 
  */
 public class REPORT02 {
 	protected static Logger logger = LoggerFactory.getLogger(REPORT02.class);
@@ -36,6 +35,7 @@ public class REPORT02 {
 	private static String medicalrecordfirstpage_tablename = PropertiesUtils.getPropertyValue(CONFIG_FILE_NAME,"medicalRecordFirstPage_tablename");
 
 	public static void main(String[] args) throws Exception {
+		postMedicalRecordFirstPage("2013-01-05", "2013-01-17");
 	}
 
 	public static JSONArray getMedicalRecordFirstPageJsonInfo(Map<String, String> map) {
@@ -70,7 +70,7 @@ public class REPORT02 {
 			json.put("ncAncestralHomeCityCode", map.get("NCANCESTRALHOMECITYCODE"));// 籍贯-市（地区、州）
 			json.put("ncAncestralHomeCountyCode", map.get("NCANCESTRALHOMECOUNTYCODE"));// 籍贯-县（区）
 			json.put("ncAncestralHomeAll", map.get("NCANCESTRALHOMEALL"));// 籍贯（完整）
-			json.put("ncNationCode", map.get("NCNATIONCODE"));// 民族代码
+			json.put("ncNationCode", GetCommonData.GetCodeFromMysql(map.get("NCNATIONCODE"),"","RC035"));// 民族代码
 			json.put("ncIdCardNo", map.get("NCIDCARDNO"));// 身份证号
 			json.put("ncOccupationTypeCode", map.get("NCOCCUPATIONTYPECODE"));// 职业类别代码
 			json.put("ncMarriageStatusCode", map.get("NCMARRIAGESTATUSCODE"));// 婚姻状况代码
@@ -144,13 +144,13 @@ public class REPORT02 {
 
 	public static void postMedicalRecordFirstPage(String startDate, String endDate) {
 		// 将从配置文件中得到的日期反转，跟rowkey一样
-		String start = new StringBuffer(startDate.replaceAll("-", "")).reverse().toString();
-		String end = new StringBuffer(endDate.replaceAll("-", "")).reverse().toString();
+		String start = new StringBuffer(startDate.replaceAll("-", "")).toString();
+		String end = new StringBuffer(endDate.replaceAll("-", "")).toString();
 		
 		List<Map<String, String>> listSumm = new ArrayList<Map<String, String>>();
 		List<PropertyFilter> filters = new ArrayList<PropertyFilter>();
-		filters.add(new PropertyFilter("RYSJ", "STRING", MatchType.GE.getOperation(), startDate + " 00:00:00"));
-		filters.add(new PropertyFilter("RYSJ", "STRING", MatchType.LE.getOperation(), endDate + " 23:59:59"));
+		filters.add(new PropertyFilter("NCDISCHARGETIME", "STRING", MatchType.GE.getOperation(), startDate.replaceAll("-", "") + "000000"));
+		filters.add(new PropertyFilter("NCDISCHARGETIME", "STRING", MatchType.LE.getOperation(), endDate.replaceAll("-", "") + "235959"));
 		/**
 		 * 在HDR_PATIENT_ZLSB表中 rowkey 是按照入院时间 来开头的所以 查询 过滤 是按照入院时间查询的
 		 */
@@ -160,7 +160,7 @@ public class REPORT02 {
 		JSONObject jsonallarr = new JSONObject();
 		if (listSumm.size() > 0) {
 			try {
-				for (int i = 0; i < listSumm.size(); i++) {
+				for (int i = 0; i < 2; i++) {
 					Map<String, String> mapInfo = listSumm.get(i);
 					json = getMedicalRecordFirstPageJsonInfo(mapInfo);
 					jsonall.addAll(json);
