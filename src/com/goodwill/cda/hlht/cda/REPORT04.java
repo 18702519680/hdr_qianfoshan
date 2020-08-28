@@ -84,7 +84,7 @@ public class REPORT04 {
 		JSONObject jsonallarr = new JSONObject();
 		if (listSumm.size() > 0) {
 			try {
-				for (int i = 0; i < 2; i++) {
+				for (int i = 0; i < 3; i++) {
 					Map<String, String> mapInfo = listSumm.get(i);
 					json = getTransferJsonInfo(mapInfo);
 					jsonall.addAll(json);
